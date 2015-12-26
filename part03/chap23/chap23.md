@@ -43,29 +43,82 @@ After the statements are executed, all declared constraints on transformed data 
 1 The C++ code underlying Stan is flexible enough to allow data to be read from memory or file. Calls from R, for instance, can be configured to read data from file or directly from R’s memory.
  
 ### 23.2. Initialization
+
+初期化はサンプリング，最適化，そして診断において同様です。
+
 Initialization is the same for sampling, optimization, and diagnosis
+
+ユーザによる初期値
+
 User-Supplied Initial Values
+
+もしパラメータにユーザによる初期値が設定されている場合，読み込みはデータの読み込みと同じメカニズム，同じファイルフォーマットでなされます。パラメータの宣言された制限は初期値について確認されます。もし宣言された制約に反する変数の値だった場合，プログラムは停止し，診断メッセージが出力されます。
+
 If there are user-supplied initial values for parameters, these are read using the same input mechanism and same file format as data reads. Any constraints declared on the parameters are validated for the initial values. If a variable’s value violates its declared constraint, the program halts and a diagnostic message is printed.
+
+読み込みの後，初期値は制約のない値に変換され，サンプラーの初期化に使われます。
+
 After being read, initial values are transformed to unconstrained values that will be used to initialize the sampler.
+
+境界の値は問題になりやすい
+
 Boundary Values are Problematic
-Because of the way Stan defines its transforms from the constrained to the uncon- strained space, initializing parameters on the boundaries of their constraints is usu- ally problematic. For instance, with a constraint
+
+Stanが制約ありから制約なしの空間に変換をおこなうことから，制約の境界上でパラメータの初期化をするのは問題になりやすいです。例えば，以下のような制約があったとき
+```
+parameters {
+  real<lower=0,upper=1> theta;
+  // ...
+}
+```
+初期値0は制約なしの値-∞に，初期値1は制約なしの値+∞になってしまいます。浮動小数点計算により逆変換は正しく行われ， **`Jacobian ヤコビアン？`** は発散し**`log probability function 確率密度関数？`** は失敗し例外を発生します。
+
+Because of the way Stan defines its transforms from the constrained to the unconstrained space, initializing parameters on the boundaries of their constraints is usually problematic. For instance, with a constraint
     parameters {
       real<lower=0,upper=1> theta;
       // ...
 }
 an initial value of 0 for theta leads to an unconstrained value of −∞, whereas a value of 1 leads to an unconstrained value of +∞. While this will be inverse transformed back correctly given the behavior of floating point arithmetic, the Jacobian will be infinite and the log probability function will fail and raise an exception.
-Random Initial Values
-If there are no user-supplied initial values, the default initialization strategy is to initialize the unconstrained parameters directly with values drawn uniformly from the interval (−2, 2). The bounds of this initialization can be changed but it is always symmetric around 0. The value of 0 is special in that it represents the median of the initialization. An unconstrained value of 0 corresponds to different parameter values depending on the constraints declared on the parameters.
-An unconstrained real does not involve any transform, so an initial value of 0 for the unconstrained parameters is also a value of 0 for the constrained parameters.
-For parameters that are bounded below at 0, the initial value of 0 on the uncon- strained scale corresponds to exp(0) = 1 on the constrained scale. A value of -2 corresponds to exp(−2) = .13 and a value of 2 corresponds to exp(2) = 7.4.
 
-For parameters bounded above and below, the initial value of 0 on the uncon- strained scale corresponds to a value at the midpoint of the constraint interval. For probability parameters, bounded below by 0 and above by 1, the transform is the inverse logit, so that an initial unconstrained value of 0 corresponds to a constrained value of 0.5, -2 corresponds to 0.12 and 2 to 0.88. Bounds other than 0 and 1 are just scaled and translated.
-Simplexes with initial values of 0 on the unconstrained basis correspond to sym- metric values on the constrained values (i.e., each value is 1/K in a K-simplex).
-Cholesky factors for positive-definite matrices are initialized to 1 on the diago- nal and 0 elsewhere; this is because the diagonal is log transformed and the below- diagonal values are unconstrained.
+ランダムな初期値
+
+Random Initial Values
+
+もしユーザーによる初期値がない場合，デフォルトでは-2から2の間から一様に直接取り出された無制約のパラメータで初期化されます。この初期値の境界は変更可能ですが，0を中心に対象である必要があります。0は初期値の中央値として特別なものです。制約なしの値0は宣言された制約に従う別のパラメータ値と対応します。
+
+If there are no user-supplied initial values, the default initialization strategy is to initialize the unconstrained parameters directly with values drawn uniformly from the interval (−2, 2). The bounds of this initialization can be changed but it is always symmetric around 0. The value of 0 is special in that it represents the median of the initialization. An unconstrained value of 0 corresponds to different parameter values depending on the constraints declared on the parameters.
+
+制約なしの`real`型は何の変換も含みません。そのため制約なしの初期値0は制約ありの値0でもあります。
+
+An unconstrained real does not involve any transform, so an initial value of 0 for the unconstrained parameters is also a value of 0 for the constrained parameters.
+
+0より大きな(0で下方に有界な)パラメータについて，制約なし尺度の初期値0は制約あり尺度の`exp(0) = 1`と一致します。-2は`epx(-2) = .13`と，2は`exp(2) = 7.4`と一致します。
+
+For parameters that are bounded below at 0, the initial value of 0 on the unconstrained scale corresponds to exp(0) = 1 on the constrained scale. A value of -2 corresponds to exp(−2) = .13 and a value of 2 corresponds to exp(2) = 7.4.
+
+上限と下限があるパラメータの場合，制約のない初期値0は上限と下限の中間と対応します。下限0上限1の確率パラメータでは逆ロジットで変換し，制約なしの初期値0は0.5に，-2は0.12に，2は0.88に対応します。0と1以外は縮小され変換されます。
+
+For parameters bounded above and below, the initial value of 0 on the unconstrained scale corresponds to a value at the midpoint of the constraint interval. For probability parameters, bounded below by 0 and above by 1, the transform is the inverse logit, so that an initial unconstrained value of 0 corresponds to a constrained value of 0.5, -2 corresponds to 0.12 and 2 to 0.88. Bounds other than 0 and 1 are just scaled and translated.
+
+制約なしの初期値0をもつ**`Simplexes 単体？`** は制約ありの **`symmetric values`** 対称値と対応します(たとえば，K-simplexでは各値が1/K)。
+
+Simplexes with initial values of 0 on the unconstrained basis correspond to symmetric values on the constrained values (i.e., each value is 1/K in a K-simplex).
+
+正定値行列のコレスキーファクターは対角成分1，のこりが0で初期化されます。なぜなら対角成分はlog変換され，対角成分以下の値は制約がないからです。
+
+Cholesky factors for positive-definite matrices are initialized to 1 on the diagonal and 0 elsewhere; this is because the diagonal is log transformed and the below- diagonal values are unconstrained.
+
+それ以外のパラメータの初期値は示された変換により判断されます。変換については56章で詳細に記述しています。
+
 The initial values for other parameters can be determined from the transform that is applied. The transforms are all described in full detail in Chapter 56.
 
+ゼロ初期値
+
 Zero Initial Values
-The initial values may all be set to 0 on the unconstrained scale. This can be helpful for diagnosis, and may also be a good starting point for sampling. Once a model is running, multiple chains with more diffuse starting points can help diagnose prob- lems with convergence; see Section 55.3 for more information on convergence moni- toring.
+
+制約なしの場合，初期値はすべて0にセットされることがあります。これは診断に便利ですし，サンプリングの開始点としても良いです。いったんモデルが走ると，複数の連鎖がより拡散した開始点を持っていることは収束診断の問題の助けになります。収束モニタリングについては55.3を参照してください。
+
+The initial values may all be set to 0 on the unconstrained scale. This can be helpful for diagnosis, and may also be a good starting point for sampling. Once a model is running, multiple chains with more diffuse starting points can help diagnose problems with convergence; see Section 55.3 for more information on convergence monitoring.
 
 ### 23.3. Sampling
 Sampling is based on simulating the Hamiltonian of a particle with a starting posi- tion equal to the current parameter values and an initial momentum (kinetic energy) generated randomly. The potential energy at work on the particle is taken to be the negative log (unnormalized) total probability function defined by the model. In the usual approach to implementing HMC, the Hamiltonian dynamics of the particle is simulated using the leapfrog integrator, which discretizes the smooth path of the particle into a number of small time steps called leapfrog steps.
