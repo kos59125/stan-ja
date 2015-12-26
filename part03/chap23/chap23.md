@@ -1,17 +1,46 @@
-## 23. Execution of a Stan Program
-This chapter provides a sketch of how a compiled Stan model is executed using sampling. Optimization shares the same data reading and initialization steps, but then does optimization rather than sampling.
-This sketch is elaborated in the following chapters of this part, which cover vari- able declarations, expressions, statements, and blocks in more detail.
+## 23. Stanプログラムの実行 Execution of a Stan Program
+この章ではコンパイルされたStanモデルがサンプリングを使ってどのように実行されるかの概観を提供します。最適化は読み込みと初期化のステップと同じデータを使用しますが，その後サンプリングではなく最適化を行います。
+変数の宣言，表現，命令，ブロックについての詳細はこのパートの残りの章で詳しく説明します。
 
-### 23.1. Reading and Transforming Data
+This chapter provides a sketch of how a compiled Stan model is executed using sampling. Optimization shares the same data reading and initialization steps, but then does optimization rather than sampling.
+This sketch is elaborated in the following chapters of this part, which cover variable declarations, expressions, statements, and blocks in more detail.
+
+### 23.1. データの読み込みと変換 Reading and Transforming Data
+データの読み込みと変換のステップはサンプリング，最適化，診断で共通しています。
+
 The reading and transforming data steps are the same for sampling, optimization and diagnostics.
+
+データの読み込み
+
 Read Data
+
+実行の最初のステップはデータのメモリへの読み込みです。データはファイルから(CmdStan)でもメモリ経由経由(RStanやPyStan)で読み込まれます。詳しくはそれぞれのマニュアルをご覧ください(注1)。データブロックで定義されたすべての変数が読み込まれます。もし読み込むことができない変数があった場合は，どのデータ変数が足りないかを示すメッセージを出してプログラムは停止します。
+
 The first step of execution is to read data into memory. Data may be read in through file (in CmdStan) or through memory (RStan and PyStan); see their respective manuals for details. 1  All of the variables declared in the data block will be read. If a variable cannot be read, the program will halt with a message indicating which data variable is missing.
-After each variable is read, if it has a declared constraint, the constraint is vali- dated. For example, if a variable N is declared as int<lower=0>, after N is read, it will be tested to make sure it is greater than or equal to zero. If a variable violates its declared constraint, the program will halt with a warning message indicating which variable contains an illegal value, the value that was read, and the constraint that was declared.
+
+それぞれの変数が読み込まれた後，もし制限が宣言されていた場合はその制限が確認されます。例えば，もし変数`N`が`int<lower=0>`と宣言されていた場合，`N`が読み込まれた後，その値が0またはそれ以上であることが確認されます。もし宣言された制約に反する変数があった場合，どの変数が不正なデータを含んでいるか，読み込まれた不正なデータ，宣言された制約を示す警告メッセージを出してプログラムは停止します。
+
+After each variable is read, if it has a declared constraint, the constraint is validated. For example, if a variable N is declared as int<lower=0>, after N is read, it will be tested to make sure it is greater than or equal to zero. If a variable violates its declared constraint, the program will halt with a warning message indicating which variable contains an illegal value, the value that was read, and the constraint that was declared.
+
+データ変換の定義
+
 Define Transformed Data
-After data is read into the model, the transformed data variable statements are exe- cuted in order to define the transformed data variables. As the statements execute, declared constraints on variables are not enforced.
+
+モデルが読み込まれると，**`the transformed data variable  変換データ変数 でOK?`** 命令が実行され，変換データ変数が定義されます。命令の実行にあたっては，変数への宣言された制約は強制されません。
+
+After data is read into the model, the transformed data variable statements are executed in order to define the transformed data variables. As the statements execute, declared constraints on variables are not enforced.
+
+変換データ変数は`real`型の場合は`NaN`が，`integer`型の場合は最小の整数(絶対値最大で負の値)がセットされ初期化されます。
+
 Transformed data variables are initialized with real values set to NaN and integer values set to the smallest integer (large absolute value negative number).
+
+命令が実行された後，変換データ変数のすべての宣言された制約が確認されます。もし確認が失敗した場合，該当する変数名，値，制約が表示され実行が停止します。
+
 After the statements are executed, all declared constraints on transformed data variables are validated. If the validation fails, execution halts and the variable’s name, value and constraints are displayed.
-1The C++ code underlying Stan is flexible enough to allow data to be read from memory or file. Calls from R, for instance, can be configured to read data from file or directly from R’s memory.
+
+(注1) Stanの基礎となっているC++のコードは柔軟でデータをメモリからでもファイルからでも読み込めます。例えば，Rからの呼び出しではデータをファイルからまたは直接Rのメモリから読み込むよう構成することができます。
+
+1 The C++ code underlying Stan is flexible enough to allow data to be read from memory or file. Calls from R, for instance, can be configured to read data from file or directly from R’s memory.
  
 ### 23.2. Initialization
 Initialization is the same for sampling, optimization, and diagnosis
