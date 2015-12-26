@@ -14,7 +14,7 @@ The reading and transforming data steps are the same for sampling, optimization 
 
 Read Data
 
-実行の最初のステップはデータのメモリへの読み込みです。データはファイルから(CmdStan)でもメモリ経由経由(RStanやPyStan)で読み込まれます。詳しくはそれぞれのマニュアルをご覧ください(注1)。データブロックで定義されたすべての変数が読み込まれます。もし読み込むことができない変数があった場合は，どのデータ変数が足りないかを示すメッセージを出してプログラムは停止します。
+実行の最初のステップはデータのメモリへの読み込みです。データはファイルから(CmdStan)でもメモリ経由経由(RStanやPyStan)で読み込まれます。詳しくはそれぞれのマニュアルをご覧ください[^注1]。データブロックで定義されたすべての変数が読み込まれます。もし読み込むことができない変数があった場合は，どのデータ変数が足りないかを示すメッセージを出してプログラムは停止します。
 
 The first step of execution is to read data into memory. Data may be read in through file (in CmdStan) or through memory (RStan and PyStan); see their respective manuals for details. 1  All of the variables declared in the data block will be read. If a variable cannot be read, the program will halt with a message indicating which data variable is missing.
 
@@ -38,7 +38,7 @@ Transformed data variables are initialized with real values set to NaN and integ
 
 After the statements are executed, all declared constraints on transformed data variables are validated. If the validation fails, execution halts and the variable’s name, value and constraints are displayed.
 
-(注1) Stanの基礎となっているC++のコードは柔軟でデータをメモリからでもファイルからでも読み込めます。例えば，Rからの呼び出しではデータをファイルからまたは直接Rのメモリから読み込むよう構成することができます。
+[^注1] Stanの基礎となっているC++のコードは柔軟でデータをメモリからでもファイルからでも読み込めます。例えば，Rからの呼び出しではデータをファイルからまたは直接Rのメモリから読み込むよう構成することができます。
 
 1 The C++ code underlying Stan is flexible enough to allow data to be read from memory or file. Calls from R, for instance, can be configured to read data from file or directly from R’s memory.
  
