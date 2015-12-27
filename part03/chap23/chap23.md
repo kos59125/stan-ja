@@ -1,5 +1,5 @@
 ## 23. Stanプログラムの実行 Execution of a Stan Program
-この章ではコンパイルされたStanモデルがサンプリングを使ってどのように実行されるかの概観を提供します。最適化は読み込みと初期化のステップと同じデータを使用しますが，その後サンプリングではなく最適化を行います。
+この章ではコンパイルされたStanモデルがサンプリングを使ってどのように実行されるかの概観を提供します。最適化はデータの読み込みと初期化のステップを共有していますが，その後サンプリングではなく最適化を行います。
 変数の宣言，表現，命令，ブロックについての詳細はこのパートの残りの章で詳しく説明します。
 
 This chapter provides a sketch of how a compiled Stan model is executed using sampling. Optimization shares the same data reading and initialization steps, but then does optimization rather than sampling.
@@ -26,7 +26,7 @@ After each variable is read, if it has a declared constraint, the constraint is 
 
 Define Transformed Data
 
-モデルが読み込まれると，**`the transformed data variable  変換データ変数 でOK?`** 命令が実行され，変換データ変数が定義されます。命令の実行にあたっては，変数への宣言された制約は強制されません。
+モデルが読み込まれると，**`the transformed data variable  変換データ変数 でOK?`** 命令が実行され，変換データ変数が定義されます。命令の実行の時点では，変数への宣言された制約は強制されません。
 
 After data is read into the model, the transformed data variable statements are executed in order to define the transformed data variables. As the statements execute, declared constraints on variables are not enforced.
 
@@ -38,7 +38,7 @@ Transformed data variables are initialized with real values set to NaN and integ
 
 After the statements are executed, all declared constraints on transformed data variables are validated. If the validation fails, execution halts and the variable’s name, value and constraints are displayed.
 
-[^注1] Stanの基礎となっているC++のコードは柔軟でデータをメモリからでもファイルからでも読み込めます。例えば，Rからの呼び出しではデータをファイルからまたは直接Rのメモリから読み込むよう構成することができます。
+[^注1] Stanの基礎となっているC++のコードは柔軟で，データをメモリからでもファイルからでも読み込めます。例えば，Rからの呼び出しではデータをファイルからまたは直接Rのメモリから読み込むよう構成することができます。
 
 1 The C++ code underlying Stan is flexible enough to allow data to be read from memory or file. Calls from R, for instance, can be configured to read data from file or directly from R’s memory.
  
@@ -52,7 +52,7 @@ Initialization is the same for sampling, optimization, and diagnosis
 
 User-Supplied Initial Values
 
-もしパラメータにユーザによる初期値が設定されている場合，読み込みはデータの読み込みと同じメカニズム，同じファイルフォーマットでなされます。パラメータの宣言された制限は初期値について確認されます。もし宣言された制約に反する変数の値だった場合，プログラムは停止し，診断メッセージが出力されます。
+もしパラメータにユーザによる初期値が設定されている場合，読み込みはデータの読み込みと同じメカニズム，同じファイルフォーマットでなされます。パラメータの宣言された制限は初期値について確認されます。もし変数の値が宣言された制約に反している場合，プログラムは停止し，診断メッセージが出力されます。
 
 If there are user-supplied initial values for parameters, these are read using the same input mechanism and same file format as data reads. Any constraints declared on the parameters are validated for the initial values. If a variable’s value violates its declared constraint, the program halts and a diagnostic message is printed.
 
@@ -64,14 +64,14 @@ After being read, initial values are transformed to unconstrained values that wi
 
 Boundary Values are Problematic
 
-Stanが制約ありから制約なしの空間に変換をおこなうことから，制約の境界上でパラメータの初期化をするのは問題になりやすいです。例えば，以下のような制約があったとき
+Stanが制約ありから制約なし空間に変換をおこなうことから，制約の境界上でパラメータの初期化をするのは問題になりやすいです。例えば，以下のような制約があったとき
 ```
 parameters {
   real<lower=0,upper=1> theta;
   // ...
 }
 ```
-初期値0は制約なしの値-∞に，初期値1は制約なしの値+∞になってしまいます。浮動小数点計算により逆変換は正しく行われ， **`Jacobian ヤコビアン？`** は発散し**`log probability function 確率密度関数？`** は失敗し例外を発生します。
+θの初期値0は制約なしの値-∞に，初期値1は制約なしの値+∞になってしまいます。浮動小数点計算により逆変換は正しく行われ， ヤコビアンは無限大になり**`log probability function 対数確率密度関数？`** は失敗し例外を発生します。 **`このくだり全く意味がわかっていません`**
 
 Because of the way Stan defines its transforms from the constrained to the unconstrained space, initializing parameters on the boundaries of their constraints is usually problematic. For instance, with a constraint
     parameters {
@@ -84,7 +84,7 @@ an initial value of 0 for theta leads to an unconstrained value of −∞, where
 
 Random Initial Values
 
-もしユーザーによる初期値がない場合，デフォルトでは-2から2の間から一様に直接取り出された無制約のパラメータで初期化されます。この初期値の境界は変更可能ですが，0を中心に対象である必要があります。0は初期値の中央値として特別なものです。制約なしの値0は宣言された制約に従う別のパラメータ値と対応します。
+もしユーザーによる初期値がない場合，デフォルトでは-2から2の間から一様に取り出された無制約のパラメータで直接初期化されます。この初期値の境界は変更可能ですが，0を中心に対象である必要があります。0は初期値の中央値として特別なものです。制約なしの値0は宣言された制約に従う別のパラメータ値と対応します。
 
 If there are no user-supplied initial values, the default initialization strategy is to initialize the unconstrained parameters directly with values drawn uniformly from the interval (−2, 2). The bounds of this initialization can be changed but it is always symmetric around 0. The value of 0 is special in that it represents the median of the initialization. An unconstrained value of 0 corresponds to different parameter values depending on the constraints declared on the parameters.
 
@@ -92,7 +92,7 @@ If there are no user-supplied initial values, the default initialization strateg
 
 An unconstrained real does not involve any transform, so an initial value of 0 for the unconstrained parameters is also a value of 0 for the constrained parameters.
 
-0より大きな(0で下方に有界な)パラメータについて，制約なし尺度の初期値0は制約あり尺度の`exp(0) = 1`と一致します。-2は`epx(-2) = .13`と，2は`exp(2) = 7.4`と一致します。
+下限が0のパラメータの場合，制約なしスケールの初期値0は制約ありスケールの`exp(0) = 1`と一致します。-2は`epx(-2) = .13`と，2は`exp(2) = 7.4`と一致します。
 
 For parameters that are bounded below at 0, the initial value of 0 on the unconstrained scale corresponds to exp(0) = 1 on the constrained scale. A value of -2 corresponds to exp(−2) = .13 and a value of 2 corresponds to exp(2) = 7.4.
 
@@ -100,7 +100,7 @@ For parameters that are bounded below at 0, the initial value of 0 on the uncons
 
 For parameters bounded above and below, the initial value of 0 on the unconstrained scale corresponds to a value at the midpoint of the constraint interval. For probability parameters, bounded below by 0 and above by 1, the transform is the inverse logit, so that an initial unconstrained value of 0 corresponds to a constrained value of 0.5, -2 corresponds to 0.12 and 2 to 0.88. Bounds other than 0 and 1 are just scaled and translated.
 
-制約なしの初期値0をもつ**`Simplexes 単体？`** は制約ありの **`symmetric values`** 対称値と対応します(たとえば，K-simplexでは各値が1/K)。
+制約なしの初期値0をもつ**`Simplexes 単体？`** は制約ありの **`symmetric values　対象値？`** と対応します(たとえば，K-simplexでは各値が1/K)。
 
 Simplexes with initial values of 0 on the unconstrained basis correspond to symmetric values on the constrained values (i.e., each value is 1/K in a K-simplex).
 
