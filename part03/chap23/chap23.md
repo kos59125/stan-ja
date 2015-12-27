@@ -116,7 +116,7 @@ The initial values for other parameters can be determined from the transform tha
 
 Zero Initial Values
 
-制約なしの場合，初期値はすべて0にセットされることがあります。これは診断に便利ですし，サンプリングの開始点としても良いです。いったんモデルが走ると，複数の連鎖がより拡散した開始点を持っていることは収束診断の問題の助けになります。収束モニタリングについては55.3を参照してください。
+制約なしスケールでは，初期値はすべて0にセットされることがあります。これは診断に便利ですし，サンプリングの開始点としても良いです。いったんモデルが走ると，複数の連鎖がより拡散した開始点を持っていることは収束診断の問題の助けになります。収束モニタリングについては55.3を参照してください。
 
 The initial values may all be set to 0 on the unconstrained scale. This can be helpful for diagnosis, and may also be a good starting point for sampling. Once a model is running, multiple chains with more diffuse starting points can help diagnose problems with convergence; see Section 55.3 for more information on convergence monitoring.
 
