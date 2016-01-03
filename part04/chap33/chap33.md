@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 ## 33. Array型の演算
 
 ### 33.1 Arrayから1つの値の作成
