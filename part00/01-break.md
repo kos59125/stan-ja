@@ -1,6 +1,6 @@
-テスト用の文法がおかしな Markdown
+ファイルが存在しない
 
-![xxx]](vv.png)
+![xxx](vv.png)
 
 $$x + \theta2$$
 
