@@ -15,10 +15,7 @@ then
   exit 1
 fi
 
-$PANDOC_PDF \
+$PANDOC \
   -o "${CIRCLE_ARTIFACTS:-.}/stan-reference-2.9.0-ja-$chapter.pdf" \
-  $target
-$PANDOC_HTML \
-  -o "${CIRCLE_ARTIFACTS:-.}/stan-reference-2.9.0-ja-$chapter.html" \
   $target
 
