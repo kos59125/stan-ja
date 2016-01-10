@@ -10,63 +10,63 @@ layout: default
 
 #### 最小・最大
 
-```plain
+~~~plain
 real min(real x[])
-```
+~~~
 
 `x`の中の最小値を返す。ただし、`x`のサイズが0の時は$+\infty$を返す。
 
-```plain
+~~~plain
 int min(int x[])
-```
+~~~
 
 `x`の中の最小値を返す。ただし、`x`のサイズが0の時はerrorを返す。
 
-```plain
+~~~plain
 real max(real x[])
-```
+~~~
 
 `x`の中の最大値を返す。ただし、`x`のサイズが0の時は$-\infty$を返す。
 
-```plain
+~~~plain
 int max(int x[])
-```
+~~~
 
 `x`の中の最大値を返す。ただし、`x`のサイズが0の時はerrorを返す。
 
 #### 総和・総乗・Log Sum of Exp
 
-```plain
+~~~plain
 int sum(int x[])
-```
+~~~
 
 `x`の要素の総和を返す。ただし、`x`のsize`N`によっては以下のように返す。　　
 
 $$\mbox{\tt sum}(x) = \left\{\begin{array}{ll} \sum_{n=1}^{N}x_{n} & \mbox{if} N > 0 \\ 0 & \mbox{if} N = 0 \end{array}\right.$$
 
-```plain
+~~~plain
 real sum(real x[])
-```
+~~~
 
 `x`の要素の総和を返す。上の定義を参照。
 
-```plain
+~~~plain
 real prod(real x[])
-```
+~~~
 
 `x`の要素の総乗を返す。ただし、`x`のsizeが0の時は1を返す。
 
-```plain
+~~~plain
 real prod(int x[])
-```
+~~~
 
 `x`の要素の総乗を返す。　　
 
 $$\mbox{\tt product}(x) = \left\{\begin{array}{ll} \prod_{n=1}^{N}x_{n} & \mbox{if} N > 0 \\ 1 & \mbox{if} N = 0 \end{array}\right.$$
 
-```plain
+~~~plain
 real log_sum_exp(real x[])
-```
+~~~
 
 `x`の各要素のexpをとったものの総和の自然対数を返す。ただし、arrayが空の時は$-\infty$を返す。
 
